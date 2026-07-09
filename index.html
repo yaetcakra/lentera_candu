@@ -884,6 +884,11 @@
             if (!appState.riwayatPoin) appState.riwayatPoin = [];
             if (!appState.logs) appState.logs = [];
 
+            // Tambahan default untuk konfigurasi Firebase mandiri
+            if (appState.customFirebaseConfig === undefined) {
+                appState.customFirebaseConfig = null;
+            }
+
             // Ensure all students have a username and password
             appState.murid.forEach((m, idx) => {
                 if (!m.username) {
@@ -1220,6 +1225,17 @@
 
                     // Panggil validasi fallback setelah data diload
                     validateAndFixAppState();
+
+                    // MENGINISIALISASI FIREBASE CLOUD (BAWAAN ATAU MANDIRI)
+                    if (window.initializeCloudServices) {
+                        if (appState.customFirebaseConfig && appState.customFirebaseConfig.apiKey) {
+                            window.initializeCloudServices(appState.customFirebaseConfig);
+                        } else if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                            window.initializeCloudServices(JSON.parse(__firebase_config));
+                        } else {
+                            if (window.setCloudDisconnected) window.setCloudDisconnected();
+                        }
+                    }
 
                     // Apply current theme settings on load
                     if (appState.theme === 'light') {
@@ -7593,7 +7609,7 @@
                             <!-- Logo Sekolah Box -->
                             <div class="p-4 bg-slate-950/60 border border-slate-900 rounded-xl flex flex-col items-center space-y-3">
                                 <span class="text-[10px] uppercase font-bold text-amber-300">Logo Resmi Sekolah</span>
-                                <div class="w-20 h-20 rounded-full border border-amber-400/30 p-0.5 overflow-hidden bg-slate-900 flex items-center justify-center">
+                                <div class="w-20 h-20 rounded-full border border-amber-400/30 p-0.5 bg-slate-950 flex items-center justify-center overflow-hidden">
                                     ${appState.identitasSekolah.logoSekolah ? `<img src="${appState.identitasSekolah.logoSekolah}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-school text-3xl text-amber-400/60"></i>`}
                                 </div>
                                 <div class="flex space-x-2">
@@ -7611,9 +7627,85 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Section E: Konfigurasi Firebase Mandiri -->
+                    <div class="glass-panel p-6 rounded-2xl border border-amber-500/20 shadow-2xl space-y-4 lg:col-span-2">
+                        <h3 class="cinzel-font text-xs uppercase tracking-widest text-amber-400 font-bold"><i class="fa-solid fa-server mr-2"></i> Konfigurasi Cloud Mandiri (Firebase)</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">Tentukan kredensial Firebase Console milik Anda sendiri untuk mengaktifkan sinkronisasi awan antar perangkat. Pengaturan ini akan menggantikan database bawaan aplikasi.</p>
+                        <form onsubmit="saveCustomFirebaseConfig(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs mt-2">
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">API Key</label>
+                                <input type="text" id="fb-apiKey" value="${appState.customFirebaseConfig?.apiKey || ''}" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Auth Domain</label>
+                                <input type="text" id="fb-authDomain" value="${appState.customFirebaseConfig?.authDomain || ''}" placeholder="project.firebaseapp.com" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Database URL</label>
+                                <input type="text" id="fb-databaseURL" value="${appState.customFirebaseConfig?.databaseURL || ''}" placeholder="https://project.firebaseio.com" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Project ID</label>
+                                <input type="text" id="fb-projectId" value="${appState.customFirebaseConfig?.projectId || ''}" placeholder="project-id" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Storage Bucket</label>
+                                <input type="text" id="fb-storageBucket" value="${appState.customFirebaseConfig?.storageBucket || ''}" placeholder="project.appspot.com" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Messaging Sender ID</label>
+                                <input type="text" id="fb-messagingSenderId" value="${appState.customFirebaseConfig?.messagingSenderId || ''}" placeholder="1234567890" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">App ID</label>
+                                <input type="text" id="fb-appId" value="${appState.customFirebaseConfig?.appId || ''}" placeholder="1:12345:web:abcde" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Measurement ID</label>
+                                <input type="text" id="fb-measurementId" value="${appState.customFirebaseConfig?.measurementId || ''}" placeholder="G-ABCDE" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+                            </div>
+                            <div class="md:col-span-2 pt-2 border-t border-slate-900 flex justify-between items-center mt-2">
+                                <button type="button" onclick="clearCustomFirebaseConfig()" class="text-[10px] font-bold text-red-400 uppercase hover:text-red-300 transition">
+                                    <i class="fa-solid fa-trash mr-1"></i> Hapus Konfigurasi
+                                </button>
+                                <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-400 text-slate-950 font-bold uppercase tracking-wider rounded shadow hover:from-amber-500 transition">
+                                    <i class="fa-solid fa-link mr-1"></i> Simpan & Reload
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             `;
         }
+
+        window.saveCustomFirebaseConfig = function(e) {
+            e.preventDefault();
+            appState.customFirebaseConfig = {
+                apiKey: document.getElementById('fb-apiKey').value,
+                authDomain: document.getElementById('fb-authDomain').value,
+                databaseURL: document.getElementById('fb-databaseURL').value,
+                projectId: document.getElementById('fb-projectId').value,
+                storageBucket: document.getElementById('fb-storageBucket').value,
+                messagingSenderId: document.getElementById('fb-messagingSenderId').value,
+                appId: document.getElementById('fb-appId').value,
+                measurementId: document.getElementById('fb-measurementId').value
+            };
+            saveState();
+            showToast("Konfigurasi Firebase berhasil disimpan. Memuat ulang sistem...", "info");
+            logActivity("Memperbarui konfigurasi Firebase Cloud Database mandiri.");
+            setTimeout(() => { window.location.reload(); }, 1500);
+        };
+
+        window.clearCustomFirebaseConfig = function() {
+            openCustomConfirm("Hapus konfigurasi Firebase mandiri? Sistem akan kembali menggunakan database bawaan (jika ada) atau menjadi offline.", function() {
+                appState.customFirebaseConfig = null;
+                saveState();
+                showToast("Konfigurasi Firebase dihapus. Memuat ulang sistem...", "info");
+                logActivity("Menghapus konfigurasi Firebase Cloud Database mandiri.");
+                setTimeout(() => { window.location.reload(); }, 1500);
+            });
+        };
 
         function triggerLocalBackup() {
             showToast("Memproses database...", "info");
@@ -7650,28 +7742,47 @@
     </script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Fetch configuration from runtime environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'lentera-candu-v1';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db = null;
         let auth = null;
         let activeSyncDocRef = null;
         let unsubscribeSyncListener = null;
+        let isSidebarCollapsed = false;
+        
+        let isFirebaseInitialized = false;
+
+        window.isFirebaseInitialized = false;
+
+        // Firebase Scope variables
+        window.db = null;
+        window.auth = null;
+
         let isSyncWriting = false;
         let isSyncReading = false;
         let cloudConnectionStatus = "disconnected"; // disconnected, connecting, connected, error
         let isCloudInitialized = false;
 
-        // Initialize Firebase safely
-        if (firebaseConfig) {
+        window.setCloudDisconnected = function() {
+            cloudConnectionStatus = "disconnected";
+            updateUIIfOnSettings();
+        };
+
+        // Initialize Firebase safely via function called dynamically
+        window.initializeCloudServices = function(config) {
+            if (!config || !config.apiKey) {
+                window.setCloudDisconnected();
+                return;
+            }
+
             try {
-                const app = initializeApp(firebaseConfig);
+                const app = getApps().length === 0 ? initializeApp(config) : getApp();
                 db = getFirestore(app);
                 auth = getAuth(app);
                 isCloudInitialized = true;
@@ -7686,10 +7797,9 @@
             } catch (err) {
                 console.error("Firebase init failed:", err);
                 cloudConnectionStatus = "error";
+                updateUIIfOnSettings();
             }
-        } else {
-            console.warn("No Firebase configuration provided. Cloud sync is disabled.");
-        }
+        };
 
         function onAuthSuccess(userCredential) {
             console.log("Authenticated successfully to cloud storage:", userCredential.user.uid);
@@ -7898,13 +8008,13 @@
         }
 
         function renderCloudSyncStatus(target) {
-            if (!firebaseConfig) {
+            if (!isCloudInitialized && cloudConnectionStatus === "disconnected") {
                 target.innerHTML = `
                     <div class="flex items-center space-x-3 text-amber-500 bg-amber-500/5 p-3 rounded-lg border border-amber-500/20">
                         <i class="fa-solid fa-cloud-slash text-xl"></i>
                         <div>
                             <p class="font-bold">Layanan Offline (Lokal)</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Sistem berjalan penuh dalam database browser perangkat saat ini.</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Sistem berjalan penuh dalam database perangkat lokal. Konfigurasi kredensial Firebase Anda untuk mengaktifkan awan.</p>
                         </div>
                     </div>
                 `;
@@ -8012,83 +8122,5 @@
             updateUIIfOnSettings();
         };
     </script>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyDb_oey1olS-oJYIi9vvopfq0rBFTWBc7o",
-    authDomain: "lentera-candu-45db6.firebaseapp.com",
-    databaseURL: "https://lentera-candu-45db6-default-rtdb.firebaseio.com",
-    projectId: "lentera-candu-45db6",
-    storageBucket: "lentera-candu-45db6.firebasestorage.app",
-    messagingSenderId: "740001077220",
-    appId: "1:740001077220:web:9f424575b0753afcf259f1",
-    measurementId: "G-9Q8GBTX2ED"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
- // Variabel untuk menyimpan ID Pengguna
-  let userId = null;
-
-  // 2. Lakukan Autentikasi Anonim secara otomatis saat website dibuka
-  async function initAuth() {
-    try {
-      await signInAnonymously(auth);
-    } catch (error) {
-      console.error("Gagal melakukan autentikasi anonim:", error);
-    }
-  }
-  initAuth();
-
-  // 3. Deteksi perubahan status login & mulai sinkronisasi
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      userId = user.uid;
-      console.log("Terautentikasi dengan ID unik perangkat:", userId);
-      
-      // Jalankan fungsi sinkronisasi setelah user terdeteksi
-      mulaiSinkronisasi(userId);
-function mulaiSinkronisasi(uid) {
-  const textarea = document.getElementById("catatanKu");
-  
-  // Referensi dokumen di database: kita simpan di folder 'catatan_user' dengan nama dokumen sesuai UID user
-  const docRef = doc(db, "catatan_user", uid);
-
-  // --- A. KIRIM DATA KE CLOUD SAAT USER MENGETIK ---
-  textarea.addEventListener("input", async () => {
-    try {
-      await setDoc(docRef, {
-        teks: textarea.value,
-        terakhirDiubah: new Date()
-      }, { merge: true }); // Menggunakan merge agar data lain tidak terhapus
-    } catch (e) {
-      console.error("Gagal menyimpan data ke cloud:", e);
-    }
-  });
-
-  // --- B. MENERIMA DATA DARI CLOUD SECARA REAL-TIME ---
-  // Fungsi ini otomatis berjalan jika ada perubahan data di cloud dari perangkat lain
-  onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      
-      // Cegah kursor melompat saat kita sendiri yang mengetik
-      if (document.activeElement !== textarea) {
-        textarea.value = data.teks || "";
-      }
-    }
-  }, (error) => {
-    console.error("Gagal menerima pembaruan real-time:", error);
-  });
-}
-</script>
 </body>
 </html>
