@@ -824,16 +824,21 @@
                             withSuccessHandler: function(cb) { this.successCb = cb; return this; },
                             withFailureHandler: function(cb) { this.failureCb = cb; return this; },
                             loadAppState: function() {
-                                // Mengembalikan null (seolah server kosong) alih-alih error
-                                if (this.successCb) setTimeout(() => this.successCb(null), 50);
+                                // Coba ambil dari localStorage jika ada
+                                const localData = localStorage.getItem('LENTERA_LOCAL_STATE');
+                                if (this.successCb) setTimeout(() => this.successCb(localData), 50);
                             },
                             saveAppState: function(data) {
+                                // Simpan ke localStorage saat mock digunakan
+                                localStorage.setItem('LENTERA_LOCAL_STATE', data);
                                 if (this.successCb) setTimeout(() => this.successCb(), 50);
                             },
                             loadSidebarState: function() {
-                                if (this.successCb) setTimeout(() => this.successCb('false'), 50);
+                                const state = localStorage.getItem('LENTERA_SIDEBAR_COLLAPSED');
+                                if (this.successCb) setTimeout(() => this.successCb(state || 'false'), 50);
                             },
                             saveSidebarState: function(state) {
+                                localStorage.setItem('LENTERA_SIDEBAR_COLLAPSED', state);
                                 if (this.successCb) setTimeout(() => this.successCb(), 50);
                             }
                         };
@@ -907,8 +912,10 @@
         }
 
         function saveState() {
-            /* 
-             FUNGSI YANG PERLU DIBUAT DI Code.gs:
+            // Backup ke localStorage agar data tidak hilang saat browser di-refresh
+            localStorage.setItem('LENTERA_LOCAL_STATE', JSON.stringify(appState));
+
+            /* FUNGSI YANG PERLU DIBUAT DI Code.gs:
              function saveAppState(jsonString) {
                  var props = PropertiesService.getUserProperties();
                  props.setProperty('LENTERA_STATE', jsonString);
@@ -1201,8 +1208,7 @@
         }
 
         window.onload = function() {
-            /* 
-             FUNGSI YANG PERLU DIBUAT DI Code.gs:
+            /* FUNGSI YANG PERLU DIBUAT DI Code.gs:
              function loadAppState() {
                  var props = PropertiesService.getUserProperties();
                  return props.getProperty('LENTERA_STATE');
@@ -1210,11 +1216,25 @@
             */
             google.script.run
                 .withSuccessHandler(function(serverData) {
+                    let isLoaded = false;
                     if (serverData) {
                         try {
                             appState = JSON.parse(serverData);
+                            isLoaded = true;
                         } catch(e) {
                             console.error("Gagal mem-parsing data dari server", e);
+                        }
+                    }
+
+                    // Lapis kedua: Ambil dari LocalStorage jika server kosong
+                    if (!isLoaded) {
+                        const localData = localStorage.getItem('LENTERA_LOCAL_STATE');
+                        if (localData) {
+                            try {
+                                appState = JSON.parse(localData);
+                            } catch(e) {
+                                console.error("Gagal membaca local storage", e);
+                            }
                         }
                     }
 
@@ -7552,7 +7572,7 @@
                         <h3 class="cinzel-font text-xs uppercase tracking-widest text-amber-400 font-bold flex items-center">
                             <i class="fa-solid fa-server mr-2 text-amber-400"></i> Konfigurasi Database Firebase
                         </h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">Masukkan kredensial Firebase Anda secara mandiri untuk mengaktifkan fitur sinkronisasi data antar perangkat secara real-time. Data kredensial disimpan aman pada browser lokal Anda. <strong class="text-amber-400">Penting:</strong> Pastikan layanan <b>Firestore Database</b> dan otentikasi <b>Anonymous</b> telah aktif di Console Firebase Anda.</p>
+                        <p class="text-xs text-slate-400 leading-relaxed">Masukkan kredensial Firebase Anda secara mandiri untuk mengaktifkan fitur sinkronisasi data antar perangkat secara real-time. Data kredensial disimpan aman pada browser lokal Anda.</p>
                         
                         <form id="firebase-config-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                             <div><label class="block text-[10px] uppercase text-slate-400 mb-1">API Key</label><input type="text" id="fb-apiKey" placeholder="AIzaSyB..." class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 font-mono"></div>
@@ -7719,6 +7739,7 @@
         function triggerResetDatabase() {
             openCustomConfirm("PERINGATAN! Seluruh data transaksi, nilai, murid, dan log ajar Anda akan dihapus permanen. Lanjutkan?", function() {
                 appState = DEFAULT_STATE;
+                localStorage.removeItem('LENTERA_LOCAL_STATE'); // Pastikan menghapus cache lokal
                 saveState();
                 showToast("Sistem LENTERA dikembalikan ke setelan pabrik.", "error");
                 logActivity("Sistem direset ulang ke pengaturan default.");
@@ -7739,8 +7760,8 @@
 
     <script type="module">
         import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Fetch configuration from runtime environment or Custom Local Storage
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'lentera-candu-v1';
@@ -7781,38 +7802,22 @@
                 isCloudInitialized = true;
                 cloudConnectionStatus = "connecting";
                 
-                const initAuth = async () => {
-                    try {
-                        // FIX: Jika pengguna menggunakan Firebase miliknya sendiri, abaikan token bawaan Canvas
-                        if (initialAuthToken && !customFirebaseConfig) {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                    } catch (err) {
-                        onAuthError(err);
-                    }
-                };
-
-                initAuth();
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        onAuthSuccess(user);
-                    }
-                });
-
+                // Authenticate first before queries (Rule 3)
+                if (initialAuthToken) {
+                    signInWithCustomToken(auth, initialAuthToken).then(onAuthSuccess).catch(onAuthError);
+                } else {
+                    signInAnonymously(auth).then(onAuthSuccess).catch(onAuthError);
+                }
             } catch (err) {
                 console.error("Firebase init failed:", err);
                 cloudConnectionStatus = "error";
-                updateUIIfOnSettings();
             }
         } else {
             console.warn("No Firebase configuration provided. Cloud sync is disabled.");
         }
 
-        function onAuthSuccess(user) {
-            console.log("Authenticated successfully to cloud storage:", user.uid);
+        function onAuthSuccess(userCredential) {
+            console.log("Authenticated successfully to cloud storage:", userCredential.user.uid);
             cloudConnectionStatus = "connected";
             
             // Check if Cloud Sync is already active in local state
@@ -7837,8 +7842,7 @@
                 unsubscribeSyncListener();
             }
 
-            const syncCollection = collection(db, 'artifacts', appId, 'public', 'data', 'sync_sessions');
-            activeSyncDocRef = doc(syncCollection, syncCode);
+            activeSyncDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_sessions', syncCode);
 
             // Listen to real-time changes
             unsubscribeSyncListener = onSnapshot(activeSyncDocRef, (docSnap) => {
@@ -7888,13 +7892,12 @@
 
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
+                if (!activeSyncDocRef) {
+                    activeSyncDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_sessions', appState.cloudSync.syncCode);
+                }
+
                 try {
                     isSyncWriting = true;
-                    if (!activeSyncDocRef) {
-                        const syncCollection = collection(db, 'artifacts', appId, 'public', 'data', 'sync_sessions');
-                        activeSyncDocRef = doc(syncCollection, appState.cloudSync.syncCode);
-                    }
-                    
                     await setDoc(activeSyncDocRef, {
                         state: JSON.stringify(appState),
                         lastUpdatedBy: auth.currentUser.uid,
@@ -7926,8 +7929,7 @@
 
             try {
                 showToast("Memulai sinkronisasi awan...", "info");
-                const syncCollection = collection(db, 'artifacts', appId, 'public', 'data', 'sync_sessions');
-                const docRef = doc(syncCollection, syncCode);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_sessions', syncCode);
                 
                 // Write current state to cloud
                 await setDoc(docRef, {
@@ -7941,7 +7943,7 @@
                 logActivity(`Mengaktifkan sinkronisasi awan dengan Kode Akses: ${syncCode}`);
             } catch (err) {
                 console.error("Failed to enable sync:", err);
-                showToast("Gagal mengaktifkan perangkat. Peringatan sistem: " + err.message, "error");
+                showToast("Gagal mendaftarkan kode ke awan.", "error");
             }
         };
 
@@ -7959,8 +7961,7 @@
 
             try {
                 showToast("Menghubungkan ke database awan...", "info");
-                const syncCollection = collection(db, 'artifacts', appId, 'public', 'data', 'sync_sessions');
-                const docRef = doc(syncCollection, rawCode);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_sessions', rawCode);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
@@ -7990,7 +7991,7 @@
                 }
             } catch (err) {
                 console.error("Connect failed:", err);
-                showToast("Gagal mengunduh data dari server. Error: " + err.message, "error");
+                showToast("Gagal mengunduh data dari server.", "error");
             }
         };
 
@@ -8056,7 +8057,7 @@
                         <i class="fa-solid fa-triangle-exclamation text-xl"></i>
                         <div>
                             <p class="font-bold">Gagal Terkoneksi</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Kredensial atau pengaturan aturan Firebase tidak diizinkan. Coba Uji Koneksi.</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Sambungan internet terputus atau konfigurasi server tidak valid.</p>
                         </div>
                     </div>
                 `;
