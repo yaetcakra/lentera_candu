@@ -661,6 +661,40 @@
         </div>
     </div>
 
+    <!-- Custom Tugas Pengumpulan Modal -->
+    <div id="tugas-pengumpulan-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden px-4">
+        <div class="relative w-full max-w-lg glass-panel rounded-2xl p-6 border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="corner-ornament-tl" style="border-color: #3b82f6;"></div>
+            <div class="corner-ornament-tr" style="border-color: #3b82f6;"></div>
+            
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="cinzel-font text-xs font-bold text-blue-400 uppercase tracking-widest">Cek Pengumpulan Tugas</h3>
+                    <p class="text-[10px] text-slate-400 mt-1" id="pengumpulan-modal-desc">Tandai murid yang sudah mengerjakan.</p>
+                </div>
+                <button type="button" onclick="closePengumpulanModal()" class="text-slate-400 hover:text-blue-400 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <form id="tugas-pengumpulan-form" onsubmit="savePengumpulan(event)" class="flex-1 overflow-y-auto pr-2 space-y-2 text-xs">
+                <input type="hidden" id="pengumpulan-tugas-id">
+                
+                <div class="flex justify-between items-center mb-2 px-1">
+                    <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Daftar Murid</span>
+                    <button type="button" onclick="toggleAllPengumpulan()" class="text-[9px] bg-slate-900 border border-slate-700 px-2 py-1 rounded text-slate-300 hover:text-blue-400 transition shadow-sm">Pilih Semua / Batal</button>
+                </div>
+
+                <div id="pengumpulan-list-container" class="space-y-2 mb-4">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <div class="flex justify-end space-x-2 pt-4 border-t border-slate-900 sticky bottom-0 bg-slate-950/95 py-2">
+                    <button type="button" onclick="closePengumpulanModal()" class="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 rounded hover:bg-slate-800 transition text-[10px] font-bold uppercase tracking-wider">Tutup</button>
+                    <button type="submit" class="px-5 py-2 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-bold uppercase tracking-wider rounded shadow hover:from-blue-500 transition text-[10px]">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full"></div>
 
     <script>
@@ -672,6 +706,7 @@
             { id: "presensi", label: "Presensi Harian", icon: "fa-solid fa-clipboard-user" },
             { id: "nilai", label: "Nilai", icon: "fa-solid fa-graduation-cap" },
             { id: "jurnal", label: "Jurnal Mengajar", icon: "fa-solid fa-journal-whills" },
+            { id: "tugas", label: "Daftar Tugas", icon: "fa-solid fa-list-check" },
             { id: "poin", label: "Poin Disiplin", icon: "fa-solid fa-award" },
             { id: "tabungan", label: "Buku Tabungan", icon: "fa-solid fa-piggy-bank" },
             { id: "rapor", label: "Cetak Rapor", icon: "fa-solid fa-file-invoice" },
@@ -803,6 +838,7 @@
                 { id: "T002", muridId: "M002", jenis: "setor", jumlah: 320000, tanggal: "2026-06-21", keterangan: "Setoran Awal" },
                 { id: "T003", muridId: "M003", jenis: "setor", jumlah: 150000, tanggal: "2026-06-22", keterangan: "Setoran Tabungan" }
             ],
+            tugas: [],
             riwayatPoin: [],
             logs: [
                 { waktu: "2026-06-25 10:00:00", aktivitas: "Sistem LENTERA diinisialisasi oleh Administrator." }
@@ -886,8 +922,16 @@
             if (!appState.nilaiSumatif) appState.nilaiSumatif = {};
             if (!appState.jurnal) appState.jurnal = [];
             if (!appState.transaksiTabungan) appState.transaksiTabungan = [];
+            if (!appState.tugas) appState.tugas = [];
             if (!appState.riwayatPoin) appState.riwayatPoin = [];
             if (!appState.logs) appState.logs = [];
+
+            // Pastikan struktur pengumpulan tugas ada
+            if (appState.tugas) {
+                appState.tugas.forEach(t => {
+                    if (!t.pengumpulan) t.pengumpulan = {};
+                });
+            }
 
             // Ensure all students have a username and password
             appState.murid.forEach((m, idx) => {
@@ -1474,6 +1518,9 @@
                     break;
                 case 'jurnal':
                     renderJurnalView(panel);
+                    break;
+                case 'tugas':
+                    renderTugasView(panel);
                     break;
                 case 'poin':
                     renderPoinView(panel);
@@ -7778,419 +7825,356 @@
             showToast("Username & Password keamanan berhasil diperbarui.");
             logActivity("Kredensial keamanan administrator diubah.");
         }
-    </script>
 
-    <script type="module">
-        import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // --- MANAJEMEN DAFTAR TUGAS ---
+        function renderTugasView(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Column 1: Form Tugas -->
+                    <div class="glass-panel p-6 rounded-2xl border border-amber-500/20 shadow-2xl h-fit">
+                        <h3 class="cinzel-font text-xs uppercase tracking-widest text-amber-400 font-bold mb-4" id="tugas-form-title">Input Tugas Baru</h3>
+                        <form onsubmit="saveTugas(event)" class="space-y-4 text-xs">
+                            <input type="hidden" id="tugas-id">
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Tanggal Pemberian</label>
+                                <input type="date" id="tugas-tanggal" required class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Mata Pelajaran</label>
+                                <select id="tugas-mapel" required class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400">
+                                    <option value="">-- Pilih Mapel --</option>
+                                    ${appState.pelajaran.map(p => `<option value="${p.nama}">${p.nama} (${p.kode})</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Deskripsi Tugas</label>
+                                <textarea id="tugas-deskripsi" rows="3" required placeholder="Contoh: Kerjakan LKS Hal. 12-15" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 placeholder-slate-700 focus:outline-none focus:border-amber-400"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Batas Waktu (Deadline)</label>
+                                <input type="date" id="tugas-deadline" required class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase text-slate-400 mb-1">Status</label>
+                                <select id="tugas-status" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400">
+                                    <option value="Aktif">Aktif (Belum Selesai)</option>
+                                    <option value="Selesai">Selesai (Sudah Dikumpulkan)</option>
+                                </select>
+                            </div>
+                            <button type="submit" id="tugas-submit-btn" class="w-full py-2 bg-gradient-to-r from-amber-600 to-amber-400 text-slate-950 font-bold uppercase tracking-wider rounded shadow hover:from-amber-500 transition">
+                                <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Tugas
+                            </button>
+                            <button type="button" onclick="resetTugasForm()" id="tugas-cancel-btn" class="hidden w-full mt-2 py-2 bg-slate-900 border border-slate-800 text-slate-300 font-bold uppercase tracking-wider rounded shadow hover:bg-slate-800 transition">
+                                Batal Edit
+                            </button>
+                        </form>
+                    </div>
 
-        // Fetch configuration from runtime environment or Custom Local Storage
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'lentera-candu-v1';
-        
-        let firebaseConfig = null;
-        const customFirebaseConfig = localStorage.getItem('LENTERA_FIREBASE_CONFIG');
-        
-        // Prioritize Custom Settings
-        if (customFirebaseConfig) {
-            try {
-                firebaseConfig = JSON.parse(customFirebaseConfig);
-            } catch(e) {
-                console.error("Gagal memparsing konfigurasi kustom lokal.");
-            }
-        } else if (typeof __firebase_config !== 'undefined') {
-            try {
-                firebaseConfig = JSON.parse(__firebase_config);
-            } catch(e) {}
-        }
-
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db = null;
-        let auth = null;
-        let activeSyncDocRef = null;
-        let unsubscribeSyncListener = null;
-        let isSyncWriting = false;
-        let isSyncReading = false;
-        let cloudConnectionStatus = "disconnected"; // disconnected, connecting, connected, error
-        let isCloudInitialized = false;
-
-        // Initialize Firebase safely
-        if (firebaseConfig) {
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                isCloudInitialized = true;
-                cloudConnectionStatus = "connecting";
-                
-                // Authenticate first before queries (Rule 3)
-                if (initialAuthToken) {
-                    signInWithCustomToken(auth, initialAuthToken).then(onAuthSuccess).catch(onAuthError);
-                } else {
-                    signInAnonymously(auth).then(onAuthSuccess).catch(onAuthError);
-                }
-            } catch (err) {
-                console.error("Firebase init failed:", err);
-                cloudConnectionStatus = "error";
-            }
-        } else {
-            console.warn("No Firebase configuration provided. Cloud sync is disabled.");
-        }
-
-        function onAuthSuccess(userCredential) {
-            console.log("Authenticated successfully to cloud storage:", userCredential.user.uid);
-            cloudConnectionStatus = "connected";
-            
-            // Check if Cloud Sync is already active in local state
-            if (appState.cloudSync && appState.cloudSync.enabled && appState.cloudSync.syncCode) {
-                activateCloudSubscription(appState.cloudSync.syncCode);
-            } else {
-                updateUIIfOnSettings();
-            }
-        }
-
-        function onAuthError(error) {
-            console.error("Authentication failed:", error);
-            cloudConnectionStatus = "error";
-            updateUIIfOnSettings();
-        }
-
-        // Rule 1 Compliance: We use path: 'artifacts/{appId}/public/data/sync_sessions/{syncCode}'
-        function activateCloudSubscription(syncCode) {
-            if (!isCloudInitialized || !auth.currentUser) return;
-
-            if (unsubscribeSyncListener) {
-                unsubscribeSyncListener();
-            }
-
-            activeSyncDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_sessions', syncCode);
-
-            // Listen to real-time changes
-            unsubscribeSyncListener = onSnapshot(activeSyncDocRef, (docSnap) => {
-                if (docSnap.exists() && !isSyncWriting) {
-                    const cloudData = docSnap.data();
-                    if (cloudData && cloudData.state) {
-                        try {
-                            const parsedState = JSON.parse(cloudData.state);
-                            // Avoid updating if states are identical
-                            const localStr = JSON.stringify(appState);
-                            const remoteStr = JSON.stringify(parsedState);
-                            
-                            if (localStr !== remoteStr) {
-                                isSyncReading = true;
-                                appState = parsedState;
-                                // Keep cloud sync info active locally
-                                appState.cloudSync = {
-                                    enabled: true,
-                                    syncCode: syncCode
-                                };
-                                saveState();
-                                console.log("State updated from cloud storage.");
-                                updateDynamicIdentity();
-                                renderView(activeMenu);
-                                isSyncReading = false;
-                            }
-                        } catch (err) {
-                            console.error("Failed to parse sync state:", err);
-                        }
-                    }
-                }
-            }, (error) => {
-                console.error("Snapshot subscription failed:", error);
-                showToast("Koneksi sinkronisasi terputus. Silakan periksa kembali.", "error");
-            });
-
-            // Set state sync flag
-            appState.cloudSync.enabled = true;
-            appState.cloudSync.syncCode = syncCode;
-            saveState();
-            updateUIIfOnSettings();
-        }
-
-        let debounceTimer = null;
-        window.triggerCloudSyncUpdate = function() {
-            if (!isCloudInitialized || !auth.currentUser || !appState.cloudSync || !appState.cloudSync.enabled || !appState.cloudSync.syncCode || isSyncReading) return;
-
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(async () => {
-                if (!activeSyncDocRef) {
-                    activeSyncDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_sessions', appState.cloudSync.syncCode);
-                }
-
-                try {
-                    isSyncWriting = true;
-                    await setDoc(activeSyncDocRef, {
-                        state: JSON.stringify(appState),
-                        lastUpdatedBy: auth.currentUser.uid,
-                        timestamp: Date.now()
-                    });
-                    isSyncWriting = false;
-                    console.log("Cloud sync database written successfully.");
-                } catch (err) {
-                    isSyncWriting = false;
-                    console.error("Cloud write failed:", err);
-                }
-            }, 1000); // 1s Debounce to avoid high-frequency write calls
-        };
-
-        // UI Functions exposed globally
-        window.enableCloudSync = async function() {
-            if (!isCloudInitialized || !auth.currentUser) {
-                showToast("Layanan awan belum siap atau tidak tersedia di platform ini.", "error");
-                return;
-            }
-
-            // Generate a secure, beautiful 6-digit alphanumeric code (e.g. LNT-W8A2)
-            const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            let randStr = "";
-            for (let i = 0; i < 5; i++) {
-                randStr += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            const syncCode = `LNT-${randStr}`;
-
-            try {
-                showToast("Memulai sinkronisasi awan...", "info");
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_sessions', syncCode);
-                
-                // Write current state to cloud
-                await setDoc(docRef, {
-                    state: JSON.stringify(appState),
-                    lastUpdatedBy: auth.currentUser.uid,
-                    timestamp: Date.now()
-                });
-
-                activateCloudSubscription(syncCode);
-                showToast("Sinkronisasi Awan Berhasil Diaktifkan!");
-                logActivity(`Mengaktifkan sinkronisasi awan dengan Kode Akses: ${syncCode}`);
-            } catch (err) {
-                console.error("Failed to enable sync:", err);
-                showToast("Gagal mendaftarkan kode ke awan.", "error");
-            }
-        };
-
-        window.connectCloudSync = async function(syncCodeInput) {
-            const rawCode = syncCodeInput.trim().toUpperCase();
-            if (!rawCode) {
-                showToast("Silakan masukkan Kode Akses terlebih dahulu.", "error");
-                return;
-            }
-
-            if (!isCloudInitialized || !auth.currentUser) {
-                showToast("Layanan awan belum terhubung dengan aman.", "error");
-                return;
-            }
-
-            try {
-                showToast("Menghubungkan ke database awan...", "info");
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_sessions', rawCode);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const cloudData = docSnap.data();
-                    if (cloudData && cloudData.state) {
-                        openCustomConfirm("Perangkat terdeteksi! Mengunduh data dari awan akan menimpa data lokal saat ini. Lanjutkan?", () => {
-                            try {
-                                appState = JSON.parse(cloudData.state);
-                                appState.cloudSync = {
-                                    enabled: true,
-                                    syncCode: rawCode
-                                };
-                                saveState();
-                                
-                                activateCloudSubscription(rawCode);
-                                updateDynamicIdentity();
-                                showToast("Perangkat Berhasil Disinkronkan!");
-                                logActivity(`Menghubungkan sinkronisasi awan ke kode: ${rawCode}`);
-                                renderView(activeMenu);
-                            } catch (e) {
-                                showToast("Data awan tidak kompatibel.", "error");
-                            }
-                        });
-                    }
-                } else {
-                    showToast("Kode Akses tidak ditemukan di server. Periksa kembali penulisan.", "error");
-                }
-            } catch (err) {
-                console.error("Connect failed:", err);
-                showToast("Gagal mengunduh data dari server.", "error");
-            }
-        };
-
-        window.disableCloudSync = function() {
-            openCustomConfirm("Apakah Anda yakin ingin mematikan sinkronisasi awan? Perangkat ini tidak akan terhubung lagi dengan perangkat lainnya.", () => {
-                if (unsubscribeSyncListener) {
-                    unsubscribeSyncListener();
-                    unsubscribeSyncListener = null;
-                }
-                
-                appState.cloudSync = {
-                    enabled: false,
-                    syncCode: ""
-                };
-                saveState();
-                showToast("Sinkronisasi dinonaktifkan.", "info");
-                logActivity("Sinkronisasi awan dinonaktifkan.");
-                updateUIIfOnSettings();
-            });
-        };
-
-        function updateUIIfOnSettings() {
-            if (activeMenu === "pengaturan") {
-                const container = document.getElementById("cloud-sync-status-container");
-                if (container) {
-                    renderCloudSyncStatus(container);
-                }
-            }
-        }
-
-        function renderCloudSyncStatus(target) {
-            if (!isCloudInitialized || !firebaseConfig) {
-                target.innerHTML = `
-                    <div class="flex items-center space-x-3 text-amber-500 bg-amber-500/5 p-3 rounded-lg border border-amber-500/20">
-                        <i class="fa-solid fa-server text-xl"></i>
-                        <div>
-                            <p class="font-bold">Firebase Belum Terhubung</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Silakan isi dan hubungkan kredensial pada panel <b>Konfigurasi Database Firebase</b> di atas untuk menggunakan fitur Sinkronisasi Awan & Multi-Device.</p>
+                    <!-- Column 2 & 3: Daftar Tugas -->
+                    <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-amber-500/20 shadow-2xl">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-3">
+                            <h3 class="cinzel-font text-xs uppercase tracking-widest text-amber-400 font-bold">Daftar Penugasan Murid</h3>
+                            <button onclick="printTugasRecap()" class="px-3 py-1.5 bg-slate-900 border border-amber-400/30 text-amber-300 hover:bg-amber-400/10 rounded text-xs font-bold uppercase transition flex items-center">
+                                <i class="fa-solid fa-print mr-1.5"></i> Cetak PDF Tugas
+                            </button>
+                        </div>
+                        <div class="space-y-4" id="tugas-list-container">
+                            <!-- Populated dynamically -->
                         </div>
                     </div>
-                `;
+                </div>
+            `;
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tugas-tanggal').value = today;
+            document.getElementById('tugas-deadline').value = today;
+
+            renderTugasList();
+        }
+
+        function renderTugasList() {
+            const container = document.getElementById('tugas-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!appState.tugas || appState.tugas.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs border border-slate-800 border-dashed rounded-xl">Belum ada tugas yang diinput.</div>`;
                 return;
             }
 
-            if (cloudConnectionStatus === "connecting") {
-                target.innerHTML = `
-                    <div class="flex items-center justify-between">
+            const totalMurid = appState.murid.length;
+
+            appState.tugas.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).forEach(t => {
+                const isDone = t.status === 'Selesai';
+                const isPastDeadline = new Date(t.deadline) < new Date(new Date().toDateString());
+                const pengumpulan = t.pengumpulan || {};
+                const terkumpul = Object.values(pengumpulan).filter(v => v).length;
+
+                const item = document.createElement('div');
+                item.className = `p-4 bg-slate-950/80 border ${isDone ? 'border-green-500/20' : 'border-slate-900'} rounded-xl relative hover:border-amber-400/30 transition text-xs`;
+                item.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
                         <div class="flex items-center space-x-2">
-                            <span class="flex h-3 w-3 relative">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
-                            </span>
-                            <span class="font-bold text-slate-300">Menghubungkan layanan awan...</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-green-500/10 text-green-400' : 'bg-amber-400/10 text-amber-400'}">${t.status}</span>
+                            <span class="font-bold text-slate-200 text-sm">${t.mapel}</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="editTugas('${t.id}')" class="text-blue-400 hover:text-blue-300" title="Edit Tugas"><i class="fa-solid fa-pencil"></i></button>
+                            <button onclick="deleteTugas('${t.id}')" class="text-red-500 hover:text-red-400" title="Hapus Tugas"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
-                `;
-                return;
-            }
-
-            if (cloudConnectionStatus === "error") {
-                target.innerHTML = `
-                    <div class="flex items-center space-x-3 text-red-500 bg-red-500/5 p-3 rounded-lg border border-red-500/20">
-                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
-                        <div>
-                            <p class="font-bold">Gagal Terkoneksi</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Sambungan internet terputus atau konfigurasi server tidak valid.</p>
-                        </div>
+                    <p class="text-slate-300 mb-3">${t.deskripsi}</p>
+                    <div class="flex flex-wrap gap-3 text-[10px] text-slate-500 border-t border-slate-900 pt-2 pb-2">
+                        <span><i class="fa-solid fa-calendar-plus mr-1"></i> Diberikan: ${t.tanggal}</span>
+                        <span class="${isPastDeadline && !isDone ? 'text-red-500 font-bold' : (isDone ? 'text-green-500/80' : 'text-amber-400/80')}"><i class="fa-solid fa-clock mr-1"></i> Deadline: ${t.deadline} ${isPastDeadline && !isDone ? '(Terlewat)' : ''}</span>
+                    </div>
+                    <div class="mt-1 pt-2 border-t border-slate-900 flex justify-between items-center bg-slate-900/30 p-2 rounded">
+                        <span class="text-[10px] ${terkumpul === totalMurid && totalMurid > 0 ? 'text-green-400' : 'text-blue-400'} font-bold">
+                            <i class="fa-solid fa-clipboard-check mr-1"></i> Terkumpul: ${terkumpul} / ${totalMurid} Murid
+                        </span>
+                        <button onclick="openPengumpulanModal('${t.id}')" class="px-3 py-1 bg-slate-900 border border-slate-800 hover:border-blue-400/50 hover:bg-blue-900/20 text-blue-400 rounded text-[10px] transition font-bold uppercase tracking-wider shadow-sm">
+                            <i class="fa-solid fa-list-check mr-1"></i> Cek Daftar
+                        </button>
                     </div>
                 `;
-                return;
-            }
-
-            // Connection is active and authenticated
-            const isSynced = appState.cloudSync && appState.cloudSync.enabled && appState.cloudSync.syncCode;
-
-            if (isSynced) {
-                target.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between bg-slate-900 p-3 rounded-lg border border-green-500/20">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="flex h-3 w-3 relative">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                                </span>
-                                <div>
-                                    <p class="font-bold text-green-400">Aktif & Sinkron (Terhubung)</p>
-                                    <p class="text-[9px] text-slate-500 font-mono mt-0.5">ID Device: ${auth.currentUser.uid.slice(0, 8)}...</p>
-                                </div>
-                            </div>
-                            <button onclick="disableCloudSync()" class="px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white rounded text-[10px] font-bold uppercase transition">
-                                Putuskan
-                            </button>
-                        </div>
-
-                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-900 flex flex-col items-center justify-center text-center space-y-2">
-                            <span class="text-[9px] uppercase tracking-wider text-slate-500">KODE AKSES SINKRONISASI PERANGKAT ANDA</span>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-2xl font-mono font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400 tracking-wider bg-slate-900 px-4 py-1.5 rounded-lg border border-amber-500/20">${appState.cloudSync.syncCode}</span>
-                                <button onclick="navigator.clipboard.writeText('${appState.cloudSync.syncCode}'); showToast('Kode Akses berhasil disalin!');" class="p-2.5 bg-slate-900 border border-slate-800 text-amber-400 rounded-lg hover:bg-slate-800 text-sm" title="Salin Kode Akses">
-                                    <i class="fa-solid fa-copy"></i>
-                                </button>
-                            </div>
-                            <span class="text-[9px] text-slate-400">Masukkan kode ini di HP, tablet, atau laptop lain untuk menyinkronkan seluruh data KBM secara instan!</span>
-                        </div>
-                    </div>
-                `;
-            } else {
-                target.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Box A: Start New Sync -->
-                        <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-900 flex flex-col justify-between">
-                            <div>
-                                <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest block mb-1">A. Daftarkan Perangkat Utama</span>
-                                <p class="text-[10px] text-slate-400 leading-relaxed mb-4">Gunakan perangkat ini sebagai sumber database utama, kemudian generate kode sinkronisasi.</p>
-                            </div>
-                            <button onclick="enableCloudSync()" class="w-full py-2 bg-gradient-to-r from-amber-600 to-amber-400 text-slate-950 text-[10px] font-bold uppercase rounded tracking-wider shadow hover:from-amber-500 transition">
-                                <i class="fa-solid fa-cloud"></i> Aktifkan Kode Sinkronisasi
-                            </button>
-                        </div>
-
-                        <!-- Box B: Connect Existing Code -->
-                        <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-900 flex flex-col justify-between space-y-3">
-                            <div>
-                                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block mb-1">B. Hubungkan ke Perangkat Lain</span>
-                                <p class="text-[10px] text-slate-400 leading-relaxed mb-2">Masukkan Kode Akses yang tertera di perangkat utama Anda untuk mengambil alih data.</p>
-                            </div>
-                            <div class="flex space-x-1">
-                                <input type="text" id="cloud-sync-input-code" placeholder="Contoh: LNT-XXXXX" class="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-100 font-bold focus:outline-none focus:border-amber-400 font-mono text-center placeholder-slate-700">
-                                <button onclick="connectCloudSync(document.getElementById('cloud-sync-input-code').value)" class="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 rounded text-[10px] font-bold uppercase transition whitespace-nowrap">
-                                    Hubungkan
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
+                container.appendChild(item);
+            });
         }
 
-        // Test Firebase Credential Functionality
-        window.triggerFirebaseTest = async function() {
-            const fbApiKey = document.getElementById('fb-apiKey').value.trim();
-            const fbProjectId = document.getElementById('fb-projectId').value.trim();
+        function saveTugas(e) {
+            e.preventDefault();
+            const id = document.getElementById('tugas-id').value;
+            const tanggal = document.getElementById('tugas-tanggal').value;
+            const mapel = document.getElementById('tugas-mapel').value;
+            const deskripsi = document.getElementById('tugas-deskripsi').value;
+            const deadline = document.getElementById('tugas-deadline').value;
+            const status = document.getElementById('tugas-status').value;
+
+            if (!appState.tugas) appState.tugas = [];
+
+            if (id) {
+                const index = appState.tugas.findIndex(t => t.id === id);
+                if (index > -1) {
+                    const oldPengumpulan = appState.tugas[index].pengumpulan || {};
+                    appState.tugas[index] = { id, tanggal, mapel, deskripsi, deadline, status, pengumpulan: oldPengumpulan };
+                    showToast("Tugas berhasil diperbarui.");
+                    logActivity("Memperbarui tugas mapel " + mapel);
+                }
+            } else {
+                const newId = 'TGS_' + Date.now();
+                appState.tugas.push({ id: newId, tanggal, mapel, deskripsi, deadline, status, pengumpulan: {} });
+                showToast("Tugas baru berhasil ditambahkan.");
+                logActivity("Menambahkan tugas baru mapel " + mapel);
+            }
+
+            saveState();
+            resetTugasForm();
+            renderTugasList();
+        }
+
+        function editTugas(id) {
+            const t = appState.tugas.find(item => item.id === id);
+            if (!t) return;
+
+            document.getElementById('tugas-id').value = t.id;
+            document.getElementById('tugas-tanggal').value = t.tanggal;
+            document.getElementById('tugas-mapel').value = t.mapel;
+            document.getElementById('tugas-deskripsi').value = t.deskripsi;
+            document.getElementById('tugas-deadline').value = t.deadline;
+            document.getElementById('tugas-status').value = t.status;
+
+            document.getElementById('tugas-form-title').innerText = "Edit Tugas";
+            document.getElementById('tugas-submit-btn').innerHTML = `<i class="fa-solid fa-floppy-disk mr-1"></i> Update Tugas`;
+            document.getElementById('tugas-cancel-btn').classList.remove('hidden');
+        }
+
+        function deleteTugas(id) {
+            openCustomConfirm("Apakah Anda yakin ingin menghapus tugas ini?", function() {
+                appState.tugas = appState.tugas.filter(t => t.id !== id);
+                saveState();
+                showToast("Tugas berhasil dihapus.", "info");
+                logActivity("Menghapus data tugas.");
+                renderTugasList();
+            });
+        }
+
+        function resetTugasForm() {
+            document.getElementById('tugas-id').value = '';
+            document.getElementById('tugas-mapel').value = '';
+            document.getElementById('tugas-deskripsi').value = '';
+            document.getElementById('tugas-status').value = 'Aktif';
             
-            if(!fbApiKey || !fbProjectId) {
-                showToast("API Key dan Project ID wajib diisi untuk menguji.", "error");
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tugas-tanggal').value = today;
+            document.getElementById('tugas-deadline').value = today;
+
+            document.getElementById('tugas-form-title').innerText = "Input Tugas Baru";
+            document.getElementById('tugas-submit-btn').innerHTML = `<i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Tugas`;
+            document.getElementById('tugas-cancel-btn').classList.add('hidden');
+        }
+
+        window.openPengumpulanModal = function(tugasId) {
+            const t = appState.tugas.find(item => item.id === tugasId);
+            if (!t) return;
+            
+            document.getElementById('pengumpulan-tugas-id').value = tugasId;
+            document.getElementById('pengumpulan-modal-desc').innerHTML = `<strong>Mapel:</strong> ${t.mapel}<br><strong>Tugas:</strong> ${t.deskripsi}`;
+            
+            const container = document.getElementById('pengumpulan-list-container');
+            container.innerHTML = '';
+            
+            const pengumpulan = t.pengumpulan || {};
+            
+            if (appState.murid.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-500 py-4 border border-slate-800 border-dashed rounded">Belum ada murid terdaftar.</div>';
+            } else {
+                appState.murid.forEach(m => {
+                    const isChecked = pengumpulan[m.id] === true;
+                    container.innerHTML += `
+                        <label class="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-blue-500/50 cursor-pointer transition">
+                            <div class="flex items-center space-x-3">
+                                <input type="checkbox" name="pengumpulan-murid-cb" value="${m.id}" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-blue-500 bg-slate-900 border-slate-700 rounded focus:ring-blue-500">
+                                <span class="text-slate-200 font-semibold text-xs">${m.nama}</span>
+                            </div>
+                            <span class="text-[10px] text-slate-500 font-mono">${m.nisn}</span>
+                        </label>
+                    `;
+                });
+            }
+            
+            document.getElementById('tugas-pengumpulan-modal').classList.remove('hidden');
+        }
+
+        window.closePengumpulanModal = function() {
+            document.getElementById('tugas-pengumpulan-modal').classList.add('hidden');
+        }
+
+        window.toggleAllPengumpulan = function() {
+            const checkboxes = document.querySelectorAll('input[name="pengumpulan-murid-cb"]');
+            let allChecked = true;
+            checkboxes.forEach(cb => { if (!cb.checked) allChecked = false; });
+            checkboxes.forEach(cb => { cb.checked = !allChecked; });
+        }
+
+        window.savePengumpulan = function(e) {
+            e.preventDefault();
+            const tugasId = document.getElementById('pengumpulan-tugas-id').value;
+            const t = appState.tugas.find(item => item.id === tugasId);
+            if (!t) return;
+            
+            const checkboxes = document.querySelectorAll('input[name="pengumpulan-murid-cb"]');
+            const newPengumpulan = {};
+            
+            checkboxes.forEach(cb => {
+                newPengumpulan[cb.value] = cb.checked;
+            });
+            
+            t.pengumpulan = newPengumpulan;
+            
+            saveState();
+            closePengumpulanModal();
+            renderTugasList();
+            showToast("Daftar pengumpulan tugas berhasil diperbarui.", "success");
+        }
+
+        function printTugasRecap() {
+            if (!appState.tugas || appState.tugas.length === 0) {
+                showToast("Tidak ada data tugas untuk dicetak.", "error");
                 return;
             }
 
-            const testConfig = {
-                apiKey: fbApiKey,
-                authDomain: document.getElementById('fb-authDomain').value.trim(),
-                databaseURL: document.getElementById('fb-databaseURL').value.trim(),
-                projectId: fbProjectId,
-                storageBucket: document.getElementById('fb-storageBucket').value.trim(),
-                messagingSenderId: document.getElementById('fb-messagingSenderId').value.trim(),
-                appId: document.getElementById('fb-appId').value.trim(),
-                measurementId: document.getElementById('fb-measurementId').value.trim()
-            };
+            const totalM = appState.murid.length;
+            const pWin = window.open('', '_blank');
+            let rowsHtml = '';
+            appState.tugas.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).forEach((t, idx) => {
+                const isDone = t.status === 'Selesai';
+                const pengumpulan = t.pengumpulan || {};
+                const terkumpul = Object.values(pengumpulan).filter(v => v).length;
+                const progressText = `<br><span style="font-size:9px; color:#2563eb; font-weight:normal;">Terkumpul: ${terkumpul}/${totalM}</span>`;
 
-            try {
-                // Initialize temporary instance
-                const tempAppName = 'test-app-' + Date.now();
-                const tempApp = initializeApp(testConfig, tempAppName);
-                const tempAuth = getAuth(tempApp);
-                
-                // Attempt an anonymous connection to verify network + rules
-                await signInAnonymously(tempAuth);
-                
-                showToast("Uji Koneksi Berhasil! Kredensial Firebase valid dan dapat dijangkau.");
-                
-                // Cleanup
-                await deleteApp(tempApp);
-            } catch (err) {
-                console.error("Test Firebase Connection Failed:", err);
-                showToast("Uji Koneksi Gagal: " + err.message, "error");
-            }
-        };
+                rowsHtml += `
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${idx + 1}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; white-space: nowrap;">${t.tanggal}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${t.mapel}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${t.deskripsi}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #b45309; font-weight: bold; white-space: nowrap;">${t.deadline}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${isDone ? 'green' : 'red'};">${t.status}${progressText}</td>
+                    </tr>
+                `;
+            });
+
+            const todayObj = new Date();
+            const todayFormat = todayObj.getDate() + ' ' + ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][todayObj.getMonth()] + ' ' + todayObj.getFullYear();
+
+            pWin.document.write(`
+                <html>
+                <head>
+                    <title>Rekap Daftar Tugas - LENTERA</title>
+                    <style>
+                        body { font-family: sans-serif; padding: 30px; color: #111; }
+                        h2 { text-align: center; color: #000000; text-transform: uppercase; margin-bottom: 5px; }
+                        p { text-align: center; font-size: 13px; margin: 0 0 20px 0; color: #555; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; }
+                        th { background-color: #f4f4f5; border: 1px solid #ddd; padding: 10px; font-size: 11px; text-transform: uppercase; text-align: center; }
+                        td { font-size: 12px; }
+                        .signatures { display: flex; justify-content: space-between; margin-top: 50px; font-size: 13px; }
+                        .sig-block { width: 40%; text-align: center; }
+                        .editable-area { border: 1px dashed transparent; padding: 4px; transition: border 0.3s; }
+                        .editable-area:hover { border: 1px dashed #000000; background: #fffbeb; cursor: pointer; }
+                        .tip-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; padding: 10px; border-radius: 6px; font-size: 11px; margin-bottom: 15px; }
+                        @media print {
+                            .no-print { display: none !important; }
+                            .editable-area { border: none !important; background: transparent !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="tip-box no-print">
+                        💡 <strong>Petunjuk Kustomisasi:</strong> Anda dapat mengklik langsung nama kepala sekolah, NIP, nama guru, atau teks apa saja pada bagian tanda tangan di bawah ini untuk mengubahnya secara langsung sebelum menekan cetak.
+                    </div>
+                    <div class="no-print" style="text-align: right; margin-bottom: 20px;">
+                        <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak PDF Daftar Tugas</button>
+                    </div>
+                    ${getKopSuratHtml()}
+                    <h2 style="margin-top: 20px;">REKAP DAFTAR TUGAS MURID</h2>
+                    <p>LENTERA &bull; KELAS ${appState.identitasSekolah.kelas || 'VI B'} &bull; TP ${appState.identitasSekolah.tahunPelajaran || '2026/2027'}</p>
+                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px; margin-top: 10px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">No</th>
+                                <th style="width: 15%;">Tanggal</th>
+                                <th style="width: 20%;">Mata Pelajaran</th>
+                                <th style="width: 35%;">Deskripsi Tugas</th>
+                                <th style="width: 15%;">Batas Waktu</th>
+                                <th style="width: 10%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+
+                    <div class="signatures">
+                        <div class="sig-block" style="text-align: left;">
+                            <p>Mengetahui,</p>
+                            <p class="editable-area" contenteditable="true">Kepala Sekolah SD N 2 Candimulyo</p>
+                            <br><br><br><br>
+                            <p class="editable-area" contenteditable="true"><strong>${appState.identitasSekolah.kepalaSekolah || 'Yazid Firdiawan, M.Pd.'}</strong></p>
+                            <p>NIP. <span class="editable-area" contenteditable="true">${appState.identitasSekolah.nipKepala || '199101032025111005'}</span></p>
+                        </div>
+                        <div class="sig-block" style="text-align: right;">
+                            <p class="editable-area" contenteditable="true">Wonosobo, ${todayFormat}</p>
+                            <p>Guru Kelas <span class="editable-area" contenteditable="true">${appState.identitasSekolah.kelas || 'VI B'}</span></p>
+                            <br><br><br><br>
+                            <p class="editable-area" contenteditable="true"><strong>${appState.identitasSekolah.guruKelas || 'Yazid Firdiawan, M.Pd.'}</strong></p>
+                            <p>NIP. <span class="editable-area" contenteditable="true">${appState.identitasSekolah.nipGuru || '199101032025111005'}</span></p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            pWin.document.close();
+        }
 
         // Intercept global state view updates to render sync control
         const originalRenderView = window.renderView;
@@ -8198,6 +8182,16 @@
             originalRenderView(menuId);
             updateUIIfOnSettings();
         };
+
+        // Fungsi pendukung untuk sinkronisasi UI
+        function updateUIIfOnSettings() {
+            // Placeholder untuk fungsi sinkronisasi pengaturan
+            // Bisa ditambahkan logika jika perlu update tampilan spesifik
+            const currentTab = document.querySelector('.menu-item.active');
+            if (currentTab && currentTab.dataset.id === 'settings') {
+                console.log("Sinkronisasi UI Pengaturan Aktif");
+            }
+        }
     </script>
 </body>
 </html>
