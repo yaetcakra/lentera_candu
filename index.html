@@ -1207,6 +1207,24 @@
             }
         }
 
+        function getKopSuratHtml() {
+            const iden = appState.identitasSekolah || {};
+            const logo = iden.logoSekolah ? `<img src="${iden.logoSekolah}" style="width: 100%; height: 100%; object-fit: contain;">` : ``;
+            return `
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border-bottom: 3px solid #000; padding-bottom: 10px;">
+                    <div style="width: 80px; height: 80px; margin-right: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                        ${logo}
+                    </div>
+                    <div style="text-align: center; flex-grow: 1;">
+                        <h1 style="margin: 0; font-size: 22px; text-transform: uppercase; color: #000;">${iden.namaSekolah || 'NAMA SEKOLAH'}</h1>
+                        <p style="margin: 5px 0 0 0; font-size: 13px; color: #000;">${iden.alamat || 'Alamat'}, ${iden.desa || ''}, Kec. ${iden.kecamatan || ''}</p>
+                        <p style="margin: 2px 0 0 0; font-size: 13px; color: #000;">Kab. ${iden.kabupaten || ''}, Prov. ${iden.provinsi || ''} ${iden.npsn ? '- NPSN: ' + iden.npsn : ''}</p>
+                    </div>
+                    <div style="width: 80px; margin-left: 20px; flex-shrink: 0;"></div>
+                </div>
+            `;
+        }
+
         window.onload = function() {
             /* FUNGSI YANG PERLU DIBUAT DI Code.gs:
              function loadAppState() {
@@ -2450,9 +2468,10 @@
                     </style>
                 </head>
                 <body>
-                    <h2>LENTERA - DAFTAR MURID</h2>
-                    <p style="text-align: center;">SD Negeri 2 Candimulyo &bull; Tahun Pelajaran 2026/2027</p>
-                    <hr style="border: 0; border-top: 2px solid #000000;">
+                    ${getKopSuratHtml()}
+                    <h2 style="margin-top: 20px;">LENTERA - DAFTAR MURID</h2>
+                    <p style="text-align: center;">Tahun Pelajaran ${appState.identitasSekolah.tahunPelajaran || '2026/2027'}</p>
+                    <hr style="border: 0; border-top: 2px solid #000000; margin-top: 10px;">
                     <table>
                         <thead>
                             <tr>
@@ -4040,9 +4059,10 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Rekap Sekarang</button>
                     </div>
-                    <h2>REKAPITULASI PRESENSI MANDIRI GURU</h2>
+                    ${getKopSuratHtml()}
+                    <h2 style="margin-top: 20px;">REKAPITULASI PRESENSI MANDIRI GURU</h2>
                     <p>LENTERA &bull; Kategori: Rekap ${recapType} - ${selectedLabel}</p>
-                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px;">
+                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px; margin-top: 10px;">
                     <table>
                         <thead>
                             ${tableHeader}
@@ -4781,9 +4801,10 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Leger Sekarang</button>
                     </div>
-                    <h2>LEGER NILAI HASIL BELAJAR - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
+                    ${getKopSuratHtml()}
+                    <h2 style="margin-top: 20px;">LEGER NILAI HASIL BELAJAR - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
                     <p>LENTERA &bull; Mapel: ${p.nama} (${p.kode}) &bull; TP ${appState.identitasSekolah.tahunPelajaran || '2026/2027'}</p>
-                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px;">
+                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px; margin-top: 10px;">
                     <table>
                         <thead>${headHtml}</thead>
                         <tbody>${bodyHtml}</tbody>
@@ -4998,9 +5019,10 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Jurnal Sekarang</button>
                     </div>
-                    <h2>JURNAL MENGAJAR GURU - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
-                    <p>LENTERA &bull; SD Negeri 2 Candimulyo &bull; ${subTitle}</p>
-                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px;">
+                    ${getKopSuratHtml()}
+                    <h2 style="margin-top: 20px;">JURNAL MENGAJAR GURU - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
+                    <p>LENTERA &bull; ${subTitle}</p>
+                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px; margin-top: 10px;">
                     <table>
                         <thead>
                             <tr>
@@ -5413,9 +5435,10 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Rekap Disiplin</button>
                     </div>
-                    <h2>REKAPITULASI BUKU KENDALI DISIPLIN MURID</h2>
+                    ${getKopSuratHtml()}
+                    <h2 style="margin-top: 20px;">REKAPITULASI BUKU KENDALI DISIPLIN MURID</h2>
                     <p>LENTERA &bull; Bulan: ${selectedLabel} ${year} &bull; Kelas: ${appState.identitasSekolah.kelas || 'VI B'}</p>
-                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px;">
+                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px; margin-top: 10px;">
 
                     <div class="section-title">1. Ringkasan Poin Disiplin Kelas</div>
                     <table>
@@ -5751,9 +5774,10 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Rekap Tabungan</button>
                     </div>
-                    <h2>REKAP SALDO TABUNGAN MURID - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
-                    <p>LENTERA &bull; SD Negeri 2 Candimulyo &bull; TP ${appState.identitasSekolah.tahunPelajaran || '2026/2027'}</p>
-                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px;">
+                    ${getKopSuratHtml()}
+                    <h2 style="margin-top: 20px;">REKAP SALDO TABUNGAN MURID - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
+                    <p>LENTERA &bull; TP ${appState.identitasSekolah.tahunPelajaran || '2026/2027'}</p>
+                    <hr style="border:0; border-top: 2px solid #000000; margin-bottom:20px; margin-top: 10px;">
                     <table>
                         <thead>
                             <tr>
@@ -6142,11 +6166,10 @@
                         <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                             <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Rekapitulasi & Ranking</button>
                         </div>
-                        <div class="header">
-                            <h2 style="margin:0; text-transform:uppercase; color:#000000;">${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h2>
-                            <p style="margin:5px 0 0 0; font-size:12px; color:#000000;">LENTERA - Layanan Administrasi Kelas Terintegrasi</p>
-                            <h3 style="margin:10px 0 0 0; color:#000000; text-transform: uppercase;">REKAPITULASI ${componentLabel.toUpperCase()} & PERINGKAT KELAS</h3>
-                            <p style="margin:5px 0 0 0; font-size:11px; color:#555;">Tahun Pelajaran: ${appState.identitasSekolah.tahunPelajaran || '2026/2027'} &bull; Kelas: ${appState.identitasSekolah.kelas || 'VI B'} &bull; Semester: ${semFilter === 'semua' ? 'Semua' : 'Semester ' + semFilter}</p>
+                        ${getKopSuratHtml()}
+                        <div class="header" style="margin-top: 15px;">
+                            <h3 style="margin:0; color:#000000; text-transform: uppercase; font-size: 16px;">REKAPITULASI ${componentLabel.toUpperCase()} & PERINGKAT KELAS</h3>
+                            <p style="margin:5px 0 0 0; font-size:12px; color:#555;">Tahun Pelajaran: ${appState.identitasSekolah.tahunPelajaran || '2026/2027'} &bull; Kelas: ${appState.identitasSekolah.kelas || 'VI B'} &bull; Semester: ${semFilter === 'semua' ? 'Semua' : 'Semester ' + semFilter}</p>
                         </div>
 
                         <table>
@@ -6470,10 +6493,9 @@
 
                     fullContentHtml += `
                         <div class="student-page">
-                            <div class="header">
-                                <h2 style="margin:0; text-transform:uppercase; color:#000000;">SD Negeri 2 Candimulyo</h2>
-                                <p style="margin:5px 0 0 0; font-size:12px; color:#000000;">LENTERA - Layanan Administrasi Kelas Terintegrasi</p>
-                                <h3 style="margin:10px 0 0 0; color:#000000;">${reportTitle}</h3>
+                            ${getKopSuratHtml()}
+                            <div class="header" style="border-bottom: none; padding-bottom: 0; margin-top: 15px;">
+                                <h3 style="margin:0; color:#000000; font-size: 16px;">${reportTitle}</h3>
                             </div>
 
                             <div class="metadata">
