@@ -3524,7 +3524,7 @@
                                 <i class="fa-solid fa-trash-can"></i> Hapus Presensi
                             </button>
                             <label class="text-slate-400 ml-2">Tanggal KBM:</label>
-                            <input type="date" id="presensi-date" value="${todayStr}" onchange="loadPresensiByDate(this.value)" class="bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-slate-100 focus:outline-none focus:border-amber-400 font-bold">
+                            <input type="date" id="presensi-date" value="${todayStr}" onchange="loadPresensiByDate(this.value)" onclick="this.showPicker?.()" onfocus="this.showPicker?.()" aria-label="Tanggal presensi harian" title="Pilih tanggal presensi dari kalender" class="bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-slate-100 focus:outline-none focus:border-amber-400 font-bold cursor-pointer">
                         </div>
                     </div>
 
@@ -3566,7 +3566,7 @@
                                 <option value="03">Maret</option>
                                 <option value="04">April</option>
                                 <option value="05">Mei</option>
-                                <option value="06" selected>Juni</option>
+                                <option value="06">Juni</option>
                                 <option value="07">Juli</option>
                                 <option value="08">Agustus</option>
                                 <option value="09">September</option>
@@ -3598,7 +3598,10 @@
                         </button>
                     </div>
                 `;
-                calculateMonthlyPresence("06");
+                const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+                const monthSelect = document.getElementById('presensi-bulan-select');
+                if (monthSelect) monthSelect.value = currentMonth;
+                calculateMonthlyPresence(currentMonth);
 
             } else if (tabName === 'semester') {
                 subContainer.innerHTML = `
@@ -5695,16 +5698,26 @@
                 }
             }
 
-            // Urutkan berdasarkan tanggal kronologis naik (dari awal ke akhir) demi keserasian buku jurnal
-            filteredJurnal.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+            // Urutkan berdasarkan tanggal, lalu jam mulai pelajaran paling awal.
+            const parseJurnalTime = (timeStr) => {
+                const match = String(timeStr || '').match(/(\d{1,2})[:.](\d{2})/);
+                return match ? Number(match[1]) * 60 + Number(match[2]) : Number.MAX_SAFE_INTEGER;
+            };
+            filteredJurnal.sort((a, b) => {
+                const dateOrder = String(a.tanggal || '').localeCompare(String(b.tanggal || ''));
+                return dateOrder || parseJurnalTime(a.jam) - parseJurnalTime(b.jam);
+            });
 
             const pWin = window.open('', '_blank');
             let rowsHtml = '';
+            let rowNumber = 0;
             filteredJurnal.forEach((j, idx) => {
+                const firstOfDate = idx === 0 || filteredJurnal[idx - 1].tanggal !== j.tanggal;
+                const dateRowspan = firstOfDate ? filteredJurnal.filter(item => item.tanggal === j.tanggal).length : 0;
+                if (firstOfDate) rowNumber++;
                 rowsHtml += `
                     <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${idx + 1}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; white-space: nowrap;">${j.tanggal}</td>
+                        ${firstOfDate ? `<td rowspan="${dateRowspan}" style="padding: 10px; border: 1px solid #ddd; text-align: center; vertical-align: middle;">${rowNumber}</td><td rowspan="${dateRowspan}" style="padding: 10px; border: 1px solid #ddd; font-weight: bold; white-space: nowrap; vertical-align: middle;">${j.tanggal}</td>` : ''}
                         <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${j.mapel}<br><small style="color:#666;">${j.jam}</small></td>
                         <td style="padding: 10px; border: 1px solid #ddd;"><b>Materi:</b> ${j.materi}<br><b style="color:#000000;">TP:</b> ${j.tp || '-'}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; font-style: italic; font-size: 11px;">${j.refleksi}</td>
@@ -5932,6 +5945,10 @@
                                 <input type="number" id="poin-val" required min="1" max="100" value="10" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400">
                             </div>
                             <div>
+                                <label for="poin-tanggal" class="block text-[10px] uppercase text-slate-400 mb-1">Tanggal Kejadian</label>
+                                <input type="date" id="poin-tanggal" required value="${new Date().toISOString().slice(0, 10)}" onclick="this.showPicker?.()" onfocus="this.showPicker?.()" aria-label="Tanggal kejadian mutasi poin" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 cursor-pointer">
+                            </div>
+                            <div>
                                 <label class="block text-[10px] uppercase text-slate-400 mb-1">Alasan Penindakan</label>
                                 <input type="text" id="poin-alasan" required placeholder="Contoh: Juara Lomba Kebersihan Kelas" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 placeholder-slate-700 focus:outline-none focus:border-amber-400">
                             </div>
@@ -5952,7 +5969,7 @@
                                     <option value="03">Maret</option>
                                     <option value="04">April</option>
                                     <option value="05">Mei</option>
-                                    <option value="06" selected>Juni</option>
+                                    <option value="06">Juni</option>
                                     <option value="07">Juli</option>
                                     <option value="08">Agustus</option>
                                     <option value="09">September</option>
@@ -5985,6 +6002,9 @@
                 </div>
             `;
 
+            const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+            const poinMonthSelect = document.getElementById('poin-bulan-select');
+            if (poinMonthSelect) poinMonthSelect.value = currentMonth;
             renderPoinHistory();
         }
 
@@ -6021,6 +6041,12 @@
             const tipe = document.getElementById('poin-tipe-select').value;
             let poinVal = parseInt(document.getElementById('poin-val').value);
             const alasan = document.getElementById('poin-alasan').value;
+            const tanggal = document.getElementById('poin-tanggal').value;
+
+            if (!tanggal) {
+                showToast("Pilih tanggal kejadian terlebih dahulu.", "error");
+                return;
+            }
 
             if (tipe === 'negatif') poinVal = -poinVal;
 
@@ -6038,7 +6064,7 @@
                 muridId,
                 tipe,
                 poin: poinVal,
-                tanggal: dateStr,
+                tanggal,
                 alasan
             });
 
@@ -8411,8 +8437,8 @@
                         </form>
                     </div>
 
-                    <!-- NEW Section: Konfigurasi Custom Firebase -->
-                    <div class="glass-panel p-6 rounded-2xl border border-amber-500/20 shadow-2xl lg:col-span-2 space-y-4">
+                    <!-- Konfigurasi Firebase kini dikelola langsung oleh aplikasi -->
+                    <div class="hidden glass-panel p-6 rounded-2xl border border-amber-500/20 shadow-2xl lg:col-span-2 space-y-4">
                         <h3 class="cinzel-font text-xs uppercase tracking-widest text-amber-400 font-bold flex items-center">
                             <i class="fa-solid fa-server mr-2 text-amber-400"></i> Konfigurasi Database Firebase
                         </h3>
@@ -8450,6 +8476,14 @@
                         <p class="text-xs text-slate-400 leading-relaxed">
                             Hubungkan beberapa perangkat (HP, tablet, laptop) untuk menyinkronkan database secara otomatis dan real-time. Perubahan di satu perangkat akan langsung diterapkan ke perangkat lainnya.
                         </p>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="testFirebaseConnection()" class="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition text-[10px] font-bold uppercase tracking-wider rounded shadow">
+                                <i class="fa-solid fa-plug-circle-bolt mr-1"></i> Uji Koneksi
+                            </button>
+                            <button type="button" onclick="connectFirebaseUI()" class="px-5 py-2 bg-gradient-to-r from-amber-600 to-amber-400 text-slate-950 font-bold uppercase tracking-wider rounded shadow hover:from-amber-500 transition">
+                                <i class="fa-solid fa-link mr-1"></i> Hubungkan Firebase
+                            </button>
+                        </div>
                         
                         <div id="cloud-sync-status-container" class="bg-slate-950/40 p-4 rounded-xl border border-slate-900 text-xs">
                             <!-- Populated dynamically by window.renderCloudSyncStatus -->
@@ -8561,9 +8595,12 @@
     };
 
     window.connectFirebaseUI = function() {
-        window.saveFirebaseConfigUI();
-        openCustomConfirm("Sistem memerlukan proses muat ulang (Reload) halaman untuk menerapkan konfigurasi Firebase yang baru. Lanjutkan?", () => {
-            window.location.reload();
+        openCustomConfirm("Hubungkan aplikasi ke layanan Firebase bawaan untuk sinkronisasi awan?", () => {
+            if (window.enableCloudSync) {
+                window.enableCloudSync();
+            } else {
+                showToast("Layanan Firebase belum siap. Coba lagi beberapa saat.", "error");
+            }
         });
     };
 
@@ -8626,29 +8663,23 @@
         }
     </script>
   <script type="module" data-html-import-id="html-import-207">
-        import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-analytics.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Fetch configuration from runtime environment or Custom Local Storage
+        // Konfigurasi Firebase bawaan aplikasi
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'lentera-candu-v1';
-        
-        let firebaseConfig = null;
-        const customFirebaseConfig = localStorage.getItem('LENTERA_FIREBASE_CONFIG');
-        
-        // Prioritize Custom Settings
-        if (customFirebaseConfig) {
-            try {
-                firebaseConfig = JSON.parse(customFirebaseConfig);
-            } catch(e) {
-                console.error("Gagal memparsing konfigurasi kustom lokal.");
-            }
-        } else if (typeof __firebase_config !== 'undefined') {
-            try {
-                firebaseConfig = JSON.parse(__firebase_config);
-            } catch(e) {}
-        }
-
+        const firebaseConfig = {
+            apiKey: "AIzaSyDb_oey1olS-oJYIi9vvopfq0rBFTWBc7o",
+            authDomain: "lentera-candu-45db6.firebaseapp.com",
+            databaseURL: "https://lentera-candu-45db6-default-rtdb.firebaseio.com",
+            projectId: "lentera-candu-45db6",
+            storageBucket: "lentera-candu-45db6.firebasestorage.app",
+            messagingSenderId: "740001077220",
+            appId: "1:740001077220:web:9f424575b0753afcf259f1",
+            measurementId: "G-9Q8GBTX2ED"
+        };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db = null;
@@ -8666,6 +8697,7 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+                getAnalytics(app);
                 isCloudInitialized = true;
                 cloudConnectionStatus = "connecting";
                 
@@ -8780,9 +8812,20 @@
         };
 
         // UI Functions exposed globally
-        window.enableCloudSync = async function() {
-            if (!isCloudInitialized || !auth.currentUser) {
-                showToast("Layanan awan belum siap atau tidak tersedia di platform ini.", "error");
+            window.enableCloudSync = async function(retryCount = 0) {
+            // Firebase authentication can finish shortly after the module loads.
+            if (!isCloudInitialized || !auth) {
+                showToast("Layanan awan sedang disiapkan. Coba lagi sebentar.", "info");
+                updateUIIfOnSettings();
+                return;
+            }
+            if (!auth.currentUser) {
+                if (retryCount < 12) {
+                    if (retryCount === 0) showToast("Menunggu autentikasi Firebase...", "info");
+                    setTimeout(() => window.enableCloudSync(retryCount + 1), 500);
+                    return;
+                }
+                showToast("Autentikasi Firebase belum selesai. Periksa koneksi internet lalu coba lagi.", "error");
                 return;
             }
 
@@ -8999,8 +9042,8 @@
 
         // Test Firebase Credential Functionality
         window.triggerFirebaseTest = async function() {
-            const fbApiKey = document.getElementById('fb-apiKey').value.trim();
-            const fbProjectId = document.getElementById('fb-projectId').value.trim();
+            const fbApiKey = firebaseConfig.apiKey;
+            const fbProjectId = firebaseConfig.projectId;
             
             if(!fbApiKey || !fbProjectId) {
                 showToast("API Key dan Project ID wajib diisi untuk menguji.", "error");
