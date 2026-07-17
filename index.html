@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id"><head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260716-05-1ab63ad"}');</script><script src="/_sdk/f432b76fb310b513.telemetry_sdk.js" integrity="sha512-9FJQ55EKmmqhyyik8BhrMVfm0+iYYfb8uOlRsjtkxJMEI97qOVEI4PnHohDjQAtvAep0IOEpdQ64eki0sz62ug=="></script>
+<html lang="id"><head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260717-05-8209e4e"}');</script><script src="/_sdk/f432b76fb310b513.telemetry_sdk.js" integrity="sha512-9FJQ55EKmmqhyyik8BhrMVfm0+iYYfb8uOlRsjtkxJMEI97qOVEI4PnHohDjQAtvAep0IOEpdQ64eki0sz62ug=="></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LENTERA - Layanan Administrasi Kelas Terintegrasi</title><!-- Tailwind CSS CDN -->
@@ -2402,7 +2402,7 @@
                     <title>Data Murid LENTERA</title>
                     <style>
                         body { font-family: sans-serif; padding: 20px; }
-                        .school-letterhead { display:flex; align-items:center; justify-content:center; gap:16px; text-align:center; position:relative; min-height:72px; } .school-logo { position:absolute; left:0; top:0; width:72px; height:72px; border:1px solid #999; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden; } .school-logo img { width:100%; height:100%; object-fit:cover; }
+                        .school-letterhead { display:flex; align-items:center; justify-content:center; gap:16px; text-align:center; position:relative; min-height:72px; } .school-letterhead-text { text-align:center; } .school-logo { position:absolute; left:0; top:0; width:72px; height:72px; border:1px solid #999; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden; } .school-logo img { width:100%; height:100%; object-fit:cover; }
                         .school-letterhead h1 { margin:0; font-size:20px; text-transform:uppercase; }
                         .school-letterhead p { margin:3px 0; font-size:11px; }
                         .letterhead-rule { border-top:3px solid #111; border-bottom:1px solid #111; margin:12px 0 20px; padding-top:2px; }
@@ -4406,6 +4406,12 @@
                     <title>Laporan Rekap Presensi - ${selectedLabel}</title>
                     <style>
                         body { font-family: sans-serif; padding: 30px; color: #111; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } .school-letterhead { display:flex; align-items:center; justify-content:center; gap:16px; text-align:center; position:relative; min-height:72px; } .school-logo { position:absolute; left:0; top:0; width:72px; height:72px; border:1px solid #999; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden; } .school-logo img { width:100%; height:100%; object-fit:cover; } .school-letterhead-text { text-align:center; } .school-letterhead h1 { margin:0; font-size:20px; text-transform:uppercase; } .school-letterhead p { margin:3px 0; font-size:11px; }
+                        .letterhead-rule { border-top: 3px solid #111; border-bottom: 1px solid #111; margin: 12px 0 20px; padding-top: 2px; }
+                        .school-letterhead { display:flex; align-items:center; justify-content:center; gap:16px; text-align:center; position:relative; min-height:72px; }
+                        .school-letterhead-text { text-align:center; }
+                        .school-logo { position:absolute; left:0; top:0; width:72px; height:72px; border:1px solid #999; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden; }
+                        .school-logo img { width:100%; height:100%; object-fit:cover; }
+                        .letterhead-rule { border-top:3px solid #111; border-bottom:1px solid #111; margin:12px 0 20px; padding-top:2px; }
                         h2 { text-align: center; color: #000000; text-transform: uppercase; margin-bottom: 5px; }
                         p { text-align: center; font-size: 13px; margin: 0 0 20px 0; color: #555; }
                         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -5322,7 +5328,7 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Leger Sekarang</button>
                     </div>
-                    <div class="school-letterhead"><div><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '20314050'}</p></div></div><div class="letterhead-rule"></div><h2>LEGER NILAI HASIL BELAJAR - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
+                    <div class="school-letterhead"><div class="school-logo">${appState.identitasSekolah.logoSekolah ? `<img src="${appState.identitasSekolah.logoSekolah}" alt="Logo sekolah">` : '🏫'}</div><div><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '20314050'}</p></div></div><div class="letterhead-rule"></div><h2>LEGER NILAI HASIL BELAJAR - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
                     <p>LENTERA &bull; Mapel: ${p.nama} (${p.kode}) &bull; TP ${appState.identitasSekolah.tahunPelajaran || '2026/2027'}</p>
                     <table>
                         <thead>${headHtml}</thead>
@@ -5486,7 +5492,7 @@
                         <form onsubmit="saveJurnal(event)" class="space-y-4 text-xs">
                             <div>
                                 <label class="block text-[10px] uppercase text-slate-400 mb-1">Tanggal KBM</label>
-                                <input type="date" id="jurnal-date" required class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400">
+                                <input type="date" id="jurnal-date" required onclick="this.showPicker?.()" onfocus="this.showPicker?.()" aria-label="Tanggal KBM" title="Pilih tanggal KBM dari kalender" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400 cursor-pointer">
                             </div>
                             <div>
                                 <label class="block text-[10px] uppercase text-slate-400 mb-1">Pilih Jadwal Mengajar</label>
@@ -5712,6 +5718,13 @@
                     <title>Arsip Jurnal Mengajar - LENTERA</title>
                     <style>
                         body { font-family: sans-serif; padding: 30px; color: #111; }
+                        .school-letterhead { display:flex; align-items:center; justify-content:center; gap:16px; text-align:center; position:relative; min-height:72px; }
+                        .school-letterhead-text { text-align:center; }
+                        .school-logo { position:absolute; left:0; top:0; width:72px; height:72px; border:1px solid #999; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden; }
+                        .school-logo img { width:100%; height:100%; object-fit:cover; }
+                        .school-letterhead h1 { margin:0; font-size:20px; text-transform:uppercase; }
+                        .school-letterhead p { margin:3px 0; font-size:11px; }
+                        .letterhead-rule { border-top:3px solid #111; border-bottom:1px solid #111; margin:12px 0 20px; padding-top:2px; }
                         h2 { text-align: center; color: #000000; text-transform: uppercase; margin-bottom: 5px; }
                         p { text-align: center; font-size: 13px; margin: 0 0 20px 0; color: #555; }
                         table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; }
@@ -5735,7 +5748,7 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Jurnal Sekarang</button>
                     </div>
-                    <div class="school-letterhead"><div><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '20314050'}</p></div></div><div class="letterhead-rule"></div><h2>JURNAL MENGAJAR GURU - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
+                    <div class="school-letterhead"><div class="school-logo">${appState.identitasSekolah.logoSekolah ? `<img src="${appState.identitasSekolah.logoSekolah}" alt="Logo sekolah">` : '🏫'}</div><div class="school-letterhead-text"><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '20314050'}</p></div></div><div class="letterhead-rule"></div><h2>JURNAL MENGAJAR GURU - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
                     <p>LENTERA &bull; ${subTitle}</p>
                     <table>
                         <thead>
@@ -6125,6 +6138,13 @@
                     <title>Rekap Bulanan Buku Kendali Disiplin - ${selectedLabel}</title>
                     <style>
                         body { font-family: sans-serif; padding: 30px; color: #111; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                        .school-letterhead { display:flex; align-items:center; justify-content:center; gap:16px; text-align:center; position:relative; min-height:72px; }
+                        .school-letterhead-text { text-align:center; }
+                        .school-logo { position:absolute; left:0; top:0; width:72px; height:72px; border:1px solid #999; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden; }
+                        .school-logo img { width:100%; height:100%; object-fit:cover; }
+                        .school-letterhead h1 { margin:0; font-size:20px; text-transform:uppercase; }
+                        .school-letterhead p { margin:3px 0; font-size:11px; }
+                        .letterhead-rule { border-top:3px solid #111; border-bottom:1px solid #111; margin:12px 0 20px; padding-top:2px; }
                         h2 { text-align: center; color: #000000; text-transform: uppercase; margin-bottom: 5px; }
                         p { text-align: center; font-size: 13px; margin: 0 0 20px 0; color: #555; }
                         table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 30px; }
@@ -6149,7 +6169,7 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Rekap Disiplin</button>
                     </div>
-                    <div class="school-letterhead"><div><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '20314050'}</p></div></div><div class="letterhead-rule"></div><h2>REKAPITULASI BUKU KENDALI DISIPLIN MURID</h2>
+                    <div class="school-letterhead"><div class="school-logo">${appState.identitasSekolah.logoSekolah ? `<img src="${appState.identitasSekolah.logoSekolah}" alt="Logo sekolah">` : '🏫'}</div><div class="school-letterhead-text"><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '20314050'}</p></div></div><div class="letterhead-rule"></div><h2>REKAPITULASI BUKU KENDALI DISIPLIN MURID</h2>
                     <p>LENTERA &bull; Bulan: ${selectedLabel} ${year} &bull; Kelas: ${appState.identitasSekolah.kelas || 'VI B'}</p>
 
                     <div class="section-title">1. Ringkasan Poin Disiplin Kelas</div>
@@ -6251,9 +6271,14 @@
                     <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-amber-500/20 shadow-2xl">
                         <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-2">
                             <h3 class="cinzel-font text-xs uppercase tracking-widest text-amber-400 font-bold">Mutasi Rekening Buku Kas Tabungan</h3>
-                            <button onclick="printTabunganRecap()" class="px-3 py-1.5 bg-slate-900 border border-amber-400/30 text-amber-300 hover:bg-amber-400/10 rounded text-xs font-bold uppercase transition">
-                                <i class="fa-solid fa-print mr-1"></i> Cetak Rekap Saldo
-                            </button>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="openStudentTabunganPrintMenu()" class="px-3 py-1.5 bg-indigo-500/10 border border-indigo-400/30 text-indigo-300 hover:bg-indigo-500/20 rounded text-xs font-bold uppercase transition">
+                                    <i class="fa-solid fa-user-tag mr-1"></i> Rekap Per Murid
+                                </button>
+                                <button onclick="printTabunganRecap()" class="px-3 py-1.5 bg-slate-900 border border-amber-400/30 text-amber-300 hover:bg-amber-400/10 rounded text-xs font-bold uppercase transition">
+                                    <i class="fa-solid fa-print mr-1"></i> Cetak Rekap Saldo
+                                </button>
+                            </div>
                         </div>
                         <div class="overflow-x-auto rounded-xl border border-slate-900">
                             <table class="w-full text-left border-collapse text-xs">
@@ -6425,6 +6450,63 @@
             renderTabunganView(document.getElementById('main-content-panel'));
         }
 
+        function openStudentTabunganPrintMenu() {
+            const panel = document.getElementById('main-content-panel');
+            const modal = document.createElement('div');
+            modal.id = 'student-tabungan-print-modal';
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4';
+            modal.innerHTML = `
+                <div class="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-indigo-500/30 shadow-2xl">
+                    <div class="corner-ornament-tl"></div><div class="corner-ornament-tr"></div>
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="cinzel-font text-xs font-bold text-indigo-300 uppercase tracking-widest">Cetak Rekap Tabungan Murid</h3>
+                        <button type="button" onclick="document.getElementById('student-tabungan-print-modal')?.remove()" class="text-slate-400 hover:text-indigo-300" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="space-y-4 text-xs">
+                        <div><label for="student-tabungan-print-select" class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">Nama Murid</label>
+                            <select id="student-tabungan-print-select" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-400">
+                                ${appState.murid.map(m => `<option value="${m.id}">${m.nama} (${m.nisn})</option>`).join('')}
+                            </select>
+                        </div>
+                        <p class="text-[10px] text-slate-500 leading-relaxed">Laporan memuat seluruh transaksi setor dan tarik sejak transaksi pertama, dikelompokkan berdasarkan bulan, lengkap dengan total bulanan dan saldo berjalan.</p>
+                        <div class="flex justify-end gap-2 pt-4 border-t border-slate-900">
+                            <button type="button" onclick="document.getElementById('student-tabungan-print-modal')?.remove()" class="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 rounded text-[10px] font-bold uppercase">Batal</button>
+                            <button type="button" onclick="printStudentTabunganDetail(document.getElementById('student-tabungan-print-select').value)" class="px-5 py-2 bg-indigo-500 text-white font-bold uppercase rounded text-[10px]"><i class="fa-solid fa-print mr-1"></i> Cetak Rekap</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        function printStudentTabunganDetail(studentId) {
+            const student = appState.murid.find(m => m.id === studentId);
+            if (!student) return;
+            document.getElementById('student-tabungan-print-modal')?.remove();
+            const transactions = appState.transaksiTabungan.filter(t => t.muridId === studentId).sort((a, b) => String(a.tanggal).localeCompare(String(b.tanggal)));
+            const months = {};
+            transactions.forEach(t => {
+                const month = String(t.tanggal || '').slice(0, 7) || 'Tanpa Bulan';
+                if (!months[month]) months[month] = { rows: [], setor: 0, tarik: 0 };
+                const amount = Number(t.jumlah) || 0;
+                months[month].rows.push(t);
+                if (t.jenis === 'setor') months[month].setor += amount; else months[month].tarik += amount;
+            });
+            let running = 0;
+            const monthBlocks = Object.keys(months).sort().map(month => {
+                const group = months[month];
+                const rows = group.rows.map(t => {
+                    const amount = Number(t.jumlah) || 0;
+                    running += t.jenis === 'setor' ? amount : -amount;
+                    return `<tr><td>${t.tanggal}</td><td>${t.jenis === 'setor' ? 'Setor' : 'Tarik'}</td><td>${t.keterangan || '-'}</td><td class="money">Rp ${amount.toLocaleString('id-ID')}</td><td class="money">Rp ${running.toLocaleString('id-ID')}</td></tr>`;
+                }).join('');
+                return `<h3>Rekap Bulan ${month}</h3><p class="summary">Total setor: <b>Rp ${group.setor.toLocaleString('id-ID')}</b> &nbsp; Total tarik: <b>Rp ${group.tarik.toLocaleString('id-ID')}</b> &nbsp; Saldo akhir bulan: <b>Rp ${running.toLocaleString('id-ID')}</b></p><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Saldo Berjalan</th></tr></thead><tbody>${rows}</tbody></table>`;
+            }).join('');
+            const win = window.open('', '_blank');
+            if (!win) { showToast('Pratinjau tidak dapat dibuka. Izinkan pop-up lalu coba lagi.', 'error'); return; }
+            win.document.write(`<html><head><title>Rekap Tabungan - ${student.nama}</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;padding:30px;color:#111}.school-letterhead{display:flex;align-items:center;justify-content:center;gap:16px;text-align:center;position:relative;min-height:72px}.school-letterhead-text{text-align:center}.school-logo{position:absolute;left:0;top:0;width:72px;height:72px;border:1px solid #999;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden}.school-logo img{width:100%;height:100%;object-fit:cover}.school-letterhead h1{margin:0;font-size:20px;text-transform:uppercase}.school-letterhead p{margin:3px 0;font-size:11px}.letterhead-rule{border-top:3px solid #111;border-bottom:1px solid #111;margin:12px 0 20px;padding-top:2px}h2{text-align:center;font-size:14px;margin:0 0 20px}h3{font-size:13px;border-left:4px solid #4f46e5;padding-left:8px;margin:24px 0 6px}.student{border:1px solid #999;padding:12px;margin-bottom:18px;font-size:12px}.summary{font-size:11px;margin:6px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:14px}th,td{border:1px solid #bbb;padding:7px;font-size:10px;text-align:left}th{background:#eef2ff}.money{text-align:right;white-space:nowrap}.print-btn{background:linear-gradient(135deg,#d97706,#fbbf24,#d97706);color:#020617;border:0;border-radius:6px;padding:10px 20px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 15px rgba(212,175,55,.35)}.print-btn:hover{background:linear-gradient(135deg,#f59e0b,#fde68a,#f59e0b)}@media print{.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:right;margin-bottom:18px"><button class="print-btn" onclick="window.print()">🖨️ Cetak Laporan</button></div><div class="school-letterhead"><div class="school-logo">${appState.identitasSekolah.logoSekolah ? `<img src="${appState.identitasSekolah.logoSekolah}" alt="Logo sekolah">` : '🏫'}</div><div class="school-letterhead-text"><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '-'}</p></div></div><div class="letterhead-rule"></div><h2>REKAP DETAIL BUKU TABUNGAN MURID</h2><div class="student"><b>Nama:</b> ${student.nama}<br><b>NISN / NIS:</b> ${student.nisn} / ${student.nis}<br><b>Kelas:</b> ${appState.identitasSekolah.kelas || 'VI B'} &nbsp; <b>Tahun Pelajaran:</b> ${appState.identitasSekolah.tahunPelajaran || '2026/2027'}</div>${monthBlocks || '<p>Belum ada transaksi tabungan.</p>'}</body></html>`);
+            win.document.close();
+        }
+
         function printTabunganRecap() {
             if (appState.murid.length === 0) {
                 showToast("Tidak ada data murid untuk merekap tabungan.", "error");
@@ -6463,6 +6545,13 @@
                     <title>Rekap Saldo Tabungan Murid - LENTERA</title>
                     <style>
                         body { font-family: sans-serif; padding: 30px; color: #111; }
+                        .school-letterhead { display:flex; align-items:center; justify-content:center; gap:16px; text-align:center; position:relative; min-height:72px; }
+                        .school-letterhead-text { text-align:center; }
+                        .school-logo { position:absolute; left:0; top:0; width:72px; height:72px; border:1px solid #999; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden; }
+                        .school-logo img { width:100%; height:100%; object-fit:cover; }
+                        .school-letterhead h1 { margin:0; font-size:20px; text-transform:uppercase; }
+                        .school-letterhead p { margin:3px 0; font-size:11px; }
+                        .letterhead-rule { border-top:3px solid #111; border-bottom:1px solid #111; margin:12px 0 20px; padding-top:2px; }
                         h2 { text-align: center; color: #000000; text-transform: uppercase; margin-bottom: 5px; }
                         p { text-align: center; font-size: 13px; margin: 0 0 20px 0; color: #555; }
                         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -6486,7 +6575,7 @@
                     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
                         <button onclick="window.print()" style="background: #b45309; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">🖨️ Cetak Rekap Tabungan</button>
                     </div>
-                    <div class="school-letterhead"><div><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '20314050'}</p></div></div><div class="letterhead-rule"></div><h2>REKAP SALDO TABUNGAN MURID - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
+                    <div class="school-letterhead"><div class="school-logo">${appState.identitasSekolah.logoSekolah ? `<img src="${appState.identitasSekolah.logoSekolah}" alt="Logo sekolah">` : '🏫'}</div><div class="school-letterhead-text"><h1>${appState.identitasSekolah.namaSekolah || 'SD Negeri 2 Candimulyo'}</h1><p>${appState.identitasSekolah.alamat || 'Jl. Mayor Unus No. 45 Candimulyo'}, ${appState.identitasSekolah.kabupaten || 'Wonosobo'}</p><p>NPSN: ${appState.identitasSekolah.npsn || '20314050'}</p></div></div><div class="letterhead-rule"></div><h2>REKAP SALDO TABUNGAN MURID - KELAS ${appState.identitasSekolah.kelas || 'VI B'}</h2>
                     <p>LENTERA &bull; TP ${appState.identitasSekolah.tahunPelajaran || '2026/2027'}</p>
                     <table>
                         <thead>
@@ -8955,6 +9044,6 @@
             updateUIIfOnSettings();
         };
     </script>
-  <script src="/_sdk/b19ec5e9a6bcccbf.editing_sdk.js" integrity="sha512-zBJgQuXCQdyGFqXgZwfp8p9NowwbyuWhOK/NGHf9nps+IMSAyeeSyv3qhtfcnKWA9sWownxUevRqEhsjnjL55w=="></script>
+  <script src="/_sdk/b7bbbe551ba4f8f5.editing_sdk.js" integrity="sha512-h06pMz6KcVo4Wjvoggb4sS5DZpb55bTriAzBmA0YwbkBA3z2ZXl8CBEbCWT+/fAsm0SwDejJ7jJHOZsLZKqPoQ=="></script>
  
 </body></html>
